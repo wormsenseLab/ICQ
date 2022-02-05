@@ -34,25 +34,22 @@ strain_key=pd.DataFrame({('x42', 'GN902', 'MEC-4 LAM-1', 'WT', 0),
 
 mu_per_px = 0.126     #pixels to microns conversion factor
 
+#define custom function to calculate correlation coefficients
 def corr_coeffs(rawG, rawR):
-    nG = rawG[7:13]
-    nR = rawR[7:13]
-    bgG= np.concatenate((rawG[0:6, 0:], rawG[14: , 0:]))
-    bgR= np.concatenate((rawR[0:6, 0:], rawR[14: , 0:]))
-    G = np.subtract(nG, np.mean(bgG,axis=0))
-    R = np.subtract(nR, np.mean(bgR,axis=0))
-    dfmG = np.subtract(G,np.mean(G))
-    dfmR = np.subtract(R,np.mean(R))
-    pdm=np.multiply(dfmG,dfmR)                  #product matrix
-    totalpx = np.shape(pdm)[0]*np.shape(pdm)[1] #total number of pixels in product matrix
-    pospx = np.count_nonzero(pdm>0)             #total number of positive pixels
-    icq=float(pospx)/totalpx - 0.5
-    pearson = np.sum(pdm)/np.sqrt(np.sum(np.power(dfmG,2))*np.sum(np.power(dfmR,2)))
+    nG = rawG[7:13]                                       #green neurite
+    nR = rawR[7:13]                                       #red neurite
+    bgG= np.concatenate((rawG[0:6, 0:], rawG[14: , 0:]))  #green background
+    bgR= np.concatenate((rawR[0:6, 0:], rawR[14: , 0:]))  #red background
+    G = np.subtract(nG, np.mean(bgG,axis=0))              #backround subtracted 2D neurite in green channel
+    R = np.subtract(nR, np.mean(bgR,axis=0))              #backround subtracted 2D neurite in red channel
+    dfmG = np.subtract(G,np.mean(G))                      #calculating difference from mean (dfm) in green channel
+    dfmR = np.subtract(R,np.mean(R))                      #calculating difference from mean (dfm) in red channel
+    pdm=np.multiply(dfmG,dfmR)                            #product matrix
+    totalpx = np.shape(pdm)[0]*np.shape(pdm)[1]           #total number of pixels in product matrix
+    pospx = np.count_nonzero(pdm>0)                       #total number of positive pixels
+    icq=float(pospx)/totalpx - 0.5                        #calculating ICQ
+    pearson = np.sum(pdm)/np.sqrt(np.sum(np.power(dfmG,2))*np.sum(np.power(dfmR,2))) #calculating Pearson's correlation coefficient
     return(icq, pearson)
-
-proximal=[0.05, 0.30]
-distal=[0.65, 0.90]
-
 
 cols_ICQ = ['Strain', 'G/R', 'Background', 'ImageID', 'Length', 'Segment', 'ICQ', 'Pearson coefficient']
 df_ICQ = pd.DataFrame()
